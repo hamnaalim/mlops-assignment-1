@@ -1,0 +1,21 @@
+# Byte-compiled files
+__pycache__/
+*.pyc
+
+# Virtual environment
+mlenv/
+
+# Data
+data/
+*.csv
+
+# MLflow logs
+mlruns/
+
+# Models
+*.h5
+*.pt
+*.pkl
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

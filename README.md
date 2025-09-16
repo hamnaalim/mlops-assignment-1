@@ -1,2 +1,16 @@
-# mlops-assignment-1
-This project applies MLOps practices to a machine learning workflow, including:  Organized project structure (data/, notebooks/, src/, models/, results/).  Version control with Git and GitHub.  Experiment tracking and model comparison using MLflow.  Reproducible training and evaluation setup.
+
+# MLOps Assignment 1
+
+This repository contains my work for **MLOps Assignment 1**.  
+It demonstrates best practices in:
+- GitHub version control
+- Project structure
+- ML experiment tracking with MLflow
+- Model training and comparison
+
+## Project Structure
+- `data/` → dataset files (not large raw data)
+- `notebooks/` → Jupyter notebooks for exploration
+- `src/` → Python source code (training, utilities)
+- `models/` → trained models
+- `results/` → evaluation metrics, plots
