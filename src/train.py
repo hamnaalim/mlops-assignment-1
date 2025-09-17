@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import joblib
 import mlflow
 import mlflow.sklearn
@@ -13,10 +14,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 )
+from mlflow.tracking import MlflowClient
 
 # Ensure folders exist
 os.makedirs("models", exist_ok=True)
 os.makedirs("results", exist_ok=True)
+
+# Timestamp for this run
+timestamp = time.strftime("%Y%m%d-%H%M%S")
 
 # Load dataset
 iris = load_iris()
@@ -35,7 +40,7 @@ models = {
 # Store results for JSON export
 results_summary = {}
 
-# Loop over models
+# Train & log each model
 for model_name, model in models.items():
     with mlflow.start_run(run_name=model_name):
         # Train
@@ -54,7 +59,7 @@ for model_name, model in models.items():
         print(f"  Recall   : {recall:.2f}")
         print(f"  F1-score : {f1:.2f}")
 
-        # Save in results_summary
+        # Save results
         results_summary[model_name] = {
             "accuracy": acc,
             "precision": precision,
@@ -71,13 +76,13 @@ for model_name, model in models.items():
         mlflow.log_metric("recall", recall)
         mlflow.log_metric("f1_score", f1)
 
-        # Save model with MLflow + locally
-        mlflow.sklearn.log_model(model, "model")
-        model_path = f"models/{model_name}.pkl"
+        # Save model with timestamp
+        model_path = f"models/{model_name}_{timestamp}.pkl"
         joblib.dump(model, model_path)
+        mlflow.sklearn.log_model(model, "model")
         print(f"📁 Saved {model_name} to {model_path}")
 
-        # Confusion Matrix Plot
+        # Confusion Matrix Plot with timestamp
         cm = confusion_matrix(y_test, y_pred)
         plt.figure(figsize=(5, 4))
         sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
@@ -87,18 +92,36 @@ for model_name, model in models.items():
         plt.xlabel("Predicted")
         plt.ylabel("Actual")
 
-        # Save plot locally + log to MLflow
-        plot_path = f"results/{model_name}_confusion_matrix.png"
+        plot_path = f"results/{model_name}_confusion_matrix_{timestamp}.png"
         plt.savefig(plot_path)
         plt.close()
         mlflow.log_artifact(plot_path)
         print(f"📊 Confusion matrix saved and logged for {model_name}")
 
-# === Save all metrics to JSON ===
-metrics_path = "results/metrics.json"
+# === Save all metrics to JSON (with timestamp) ===
+metrics_path = f"results/metrics_{timestamp}.json"
 with open(metrics_path, "w") as f:
     json.dump(results_summary, f, indent=4)
 print(f"\n📑 Metrics summary saved to {metrics_path}")
 
-# Log JSON as MLflow artifact too
 mlflow.log_artifact(metrics_path)
+
+# === Select the best model (based on F1-score) ===
+best_model = max(results_summary.items(), key=lambda x: x[1]["f1_score"])
+best_model_name, best_model_metrics = best_model
+
+print(f"\n🌟 Best Model: {best_model_name}")
+print(f"   F1-score: {best_model_metrics['f1_score']:.2f}")
+
+# Save best model info locally (with timestamp)
+best_model_path = f"results/best_model_{timestamp}.txt"
+with open(best_model_path, "w") as f:
+    f.write(f"Best Model: {best_model_name}\n")
+    f.write(f"Metrics: {best_model_metrics}\n")
+
+print(f"📑 Best model details saved to {best_model_path}")
+
+# Log best model file into MLflow
+mlflow.log_artifact(best_model_path)
+
+print("\n✅ Training, evaluation, logging, and model registration steps completed!")
