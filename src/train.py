@@ -5,12 +5,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 # Load dataset
 iris = load_iris()
 X, y = iris.data, iris.target
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 # Define models to compare
 models = {
@@ -27,8 +27,17 @@ for model_name, model in models.items():
 
         # Evaluate
         y_pred = model.predict(X_test)
+
         acc = accuracy_score(y_test, y_pred)
-        print(f"✅ {model_name} trained. Accuracy: {acc:.2f}")
+        precision = precision_score(y_test, y_pred, average="weighted")
+        recall = recall_score(y_test, y_pred, average="weighted")
+        f1 = f1_score(y_test, y_pred, average="weighted")
+
+        print(f"\n✅ {model_name} Results:")
+        print(f"  Accuracy : {acc:.2f}")
+        print(f"  Precision: {precision:.2f}")
+        print(f"  Recall   : {recall:.2f}")
+        print(f"  F1-score : {f1:.2f}")
 
         # Log parameters
         mlflow.log_param("model_type", model_name)
@@ -42,6 +51,9 @@ for model_name, model in models.items():
 
         # Log metrics
         mlflow.log_metric("accuracy", acc)
+        mlflow.log_metric("precision", precision)
+        mlflow.log_metric("recall", recall)
+        mlflow.log_metric("f1_score", f1)
 
         # Save model
         mlflow.sklearn.log_model(model, "model")
