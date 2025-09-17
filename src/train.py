@@ -4,6 +4,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 # Load dataset
@@ -14,7 +15,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Define models to compare
 models = {
     "LogisticRegression": LogisticRegression(max_iter=200),
-    "DecisionTree": DecisionTreeClassifier(max_depth=3, random_state=42)
+    "DecisionTree": DecisionTreeClassifier(max_depth=3, random_state=42),
+    "RandomForest": RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
 }
 
 # Loop over models
@@ -28,13 +30,17 @@ for model_name, model in models.items():
         acc = accuracy_score(y_test, y_pred)
         print(f"✅ {model_name} trained. Accuracy: {acc:.2f}")
 
-        # Log params, metrics, and model
+        # Log parameters
         mlflow.log_param("model_type", model_name)
         if model_name == "LogisticRegression":
             mlflow.log_param("max_iter", 200)
-        else:
+        elif model_name == "DecisionTree":
             mlflow.log_param("max_depth", 3)
+        elif model_name == "RandomForest":
+            mlflow.log_param("n_estimators", 100)
+            mlflow.log_param("max_depth", 5)
 
+        # Log metrics
         mlflow.log_metric("accuracy", acc)
 
         # Save model
